@@ -2,7 +2,7 @@
 
 from .detector import ObjectDetector, draw_detections, draw_fps
 from .video_processor import VideoProcessor
-from .utils import load_config, setup_output_directory, save_detection_results
+from .utils import load_config, setup_output_directory, save_detection_results, print_system_info
 from .tracker import ByteTracker, SimpleDeepSORT, draw_tracks
 
 __all__ = [
@@ -15,5 +15,6 @@ __all__ = [
     'save_detection_results',
     'ByteTracker',
     'SimpleDeepSORT',
-    'draw_tracks'
+    'draw_tracks',
+    'print_system_info',
 ]

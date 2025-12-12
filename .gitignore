@@ -82,6 +82,22 @@ target/
 profile_default/
 ipython_config.py
 
+# Model weights
+*.pt
+*.pth
+*.onnx
+*.engine
+
+# Output
+output/
+runs/
+*.mp4
+*.avi
+
+# OS specific
+.DS_Store
+Thumbs.db
+
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is
 #   intended to run in multiple environments; otherwise, check them in:

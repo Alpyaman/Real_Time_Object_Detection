@@ -1,0 +1,37 @@
+# Real-Time Object Detection Configuration
+
+# Model Configuration
+model:
+  name: "yolov8n"  # Options: yolov8n, yolov8s, yolov8m, yolov8l, yolov8x (n=nano, s=small, m=medium, l=large, x=xlarge)
+  confidence_threshold: 0.5
+  iou_threshold: 0.45
+  device: "cpu"  # Options: cpu, cuda, mps (for Apple Silicon)
+  
+# Video Processing
+video:
+  input_source: 0  # 0 for webcam, or path to video file
+  frame_skip: 0  # Skip frames for better performance (0 = no skip)
+  target_fps: 30
+  resize_width: 640  # Width for processing (smaller = faster)
+  resize_height: 480
+
+# Display Configuration
+display:
+  show_fps: true
+  show_labels: true
+  show_confidence: true
+  bbox_thickness: 2
+  font_scale: 0.6
+  
+# Performance Optimization
+optimization:
+  use_half_precision: false  # FP16 for faster inference (requires CUDA)
+  use_tensorrt: false  # TensorRT optimization (requires setup)
+  batch_size: 1
+  num_threads: 4  # CPU threads for inference
+  
+# Output
+output:
+  save_video: false
+  output_path: "output"
+  save_detections: false  # Save detection results to JSON

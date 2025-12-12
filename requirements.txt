@@ -1,0 +1,27 @@
+# Core ML and Computer Vision
+ultralytics>=8.0.0  # YOLOv8/YOLOv11
+opencv-python>=4.8.0
+opencv-contrib-python>=4.8.0
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Object Tracking
+filterpy>=1.4.5  # Kalman filter for tracking
+scipy>=1.10.0
+lap>=0.4.0  # Linear assignment problem solver
+
+# Performance Optimization
+numpy>=1.24.0
+pillow>=10.0.0
+
+# Utilities
+pyyaml>=6.0
+tqdm>=4.65.0
+
+# Optional: For web deployment
+flask>=2.3.0
+flask-cors>=4.0.0
+
+# Development
+pytest>=7.4.0
+black>=23.0.0

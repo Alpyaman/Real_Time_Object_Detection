@@ -25,8 +25,8 @@ import sys
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from detector import ObjectDetector
-from tracker import ByteTracker
+from detector import ObjectDetector, draw_detections
+from tracker import ByteTracker, draw_tracks
 from highway_counter import VehicleCounter
 
 
@@ -198,7 +198,7 @@ def main():
     print(f"\nInitializing detector: {args.model}")
     detector = ObjectDetector(
         model_name=args.model,
-        conf_threshold=args.conf,
+        confidence_threshold=args.conf,
         iou_threshold=args.iou
     )
     
@@ -250,21 +250,21 @@ def main():
                 break
             
             # Detect objects
-            detections = detector.detect(frame)
+            detections, inference_time = detector.detect(frame)
             
             # Filter for vehicles only (cars, trucks, buses, motorcycles)
             vehicle_classes = [2, 3, 5, 7]  # car, motorcycle, bus, truck
-            vehicle_detections = [d for d in detections if int(d[5]) in vehicle_classes]
+            vehicle_detections = [d for d in detections if d['class_id'] in vehicle_classes]
             
             # Update tracker
-            tracks = tracker.update(vehicle_detections, frame.shape[:2])
+            tracks = tracker.update(vehicle_detections)
             
             # Update counter
             counter.update(tracks, frame.shape[:2], fps)
             
             # Draw visualizations
-            frame = detector.draw_detections(frame, vehicle_detections)
-            frame = tracker.draw_tracks(frame, tracks)
+            frame = draw_detections(frame, vehicle_detections)
+            frame = draw_tracks(frame, tracks)
             frame = counter.draw(frame)
             
             # Draw FPS

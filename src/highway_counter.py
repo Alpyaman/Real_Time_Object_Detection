@@ -105,12 +105,20 @@ class VehicleCounter:
         
         # Process each track
         for track in tracks:
-            track_id = track[4]  # Assuming track = [x1, y1, x2, y2, track_id, class_id, conf]
-            if len(track) < 7:
+            # Track is a dict with 'track_id', 'bbox', 'class_id', 'confidence', etc.
+            if not isinstance(track, dict):
                 continue
                 
-            class_id = int(track[5])
-            conf = track[6]
+            track_id = track.get('track_id')
+            if track_id is None:
+                continue
+                
+            class_id = track.get('class_id')
+            conf = track.get('confidence', 1.0)
+            bbox = track.get('bbox')
+            
+            if bbox is None or len(bbox) < 4:
+                continue
             
             # Skip if confidence too low
             if conf < self.min_confidence:
@@ -124,7 +132,7 @@ class VehicleCounter:
             vehicle_type = self._get_vehicle_type(class_id)
             
             # Get center point of bounding box
-            x1, y1, x2, y2 = track[:4]
+            x1, y1, x2, y2 = bbox[:4]
             cx = int((x1 + x2) / 2)
             cy = int((y1 + y2) / 2)
             
@@ -258,7 +266,7 @@ class VehicleCounter:
     
     def _cleanup_old_tracks(self, active_tracks: List):
         """Remove tracks that are no longer active."""
-        active_ids = {int(track[4]) for track in active_tracks}
+        active_ids = {track.get('track_id') for track in active_tracks if isinstance(track, dict) and track.get('track_id') is not None}
         
         # Remove from track_positions
         old_ids = set(self.track_positions.keys()) - active_ids

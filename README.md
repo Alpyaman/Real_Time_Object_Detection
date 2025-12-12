@@ -10,6 +10,7 @@ A high-performance real-time object detection system using YOLOv8/YOLOv11 archit
 
 - **Real-Time Performance**: Achieves 20-30+ FPS on CPU, 100+ FPS on GPU
 - **Multiple YOLO Models**: Support for YOLOv8n/s/m/l/x variants
+- **Object Tracking**: ByteTrack and DeepSORT for persistent object IDs
 - **Flexible Input**: Webcam, video files, or RTSP streams
 - **Easy Configuration**: YAML-based configuration system
 - **Performance Monitoring**: Real-time FPS counter and statistics
@@ -66,6 +67,16 @@ python main.py --device cuda
 python main.py --save --output output/result.mp4
 ```
 
+**Enable Object Tracking (ByteTrack - Fast)**
+```bash
+python main.py --tracker bytetrack
+```
+
+**Enable Object Tracking (DeepSORT - Robust)**
+```bash
+python main.py --tracker deepsort
+```
+
 ### Controls
 
 - **q** - Quit application
@@ -105,12 +116,17 @@ python main.py --save --output output/result.mp4
 │               Visualization & Output                     │
 │     (Bounding Boxes, Labels, FPS, Video Recording)      │
 └─────────────────────────────────────────────────────────┘
-```
-
-### Project Structure
-
-```
-Real_Time_Object_Detection/
+```├── tracker.py            # Object tracking (ByteTrack, DeepSORT)
+│   └── utils.py              # Utility functions
+├── examples/
+│   ├── webcam_detection.py         # Simple webcam example
+│   ├── video_file_detection.py     # Video file processing
+│   ├── benchmark.py                # Performance benchmarking
+│   ├── detect_specific_objects.py  # Class filtering example
+│   ├── tracking_bytetrack.py       # ByteTrack tracking demo
+│   ├── tracking_deepsort.py        # DeepSORT tracking demo
+│   ├── tracking_comparison.py      # Compare tracking algorithms
+│   └── people_counter.py           # People counting with tracking
 ├── src/
 │   ├── __init__.py           # Package initialization
 │   ├── detector.py           # Core YOLO detection module
@@ -169,11 +185,122 @@ python main.py [OPTIONS]
 Options:
   --source SOURCE          Video source (0 for webcam, or video path)
   --model MODEL           YOLO model (yolov8n/s/m/l/x)
-  --device DEVICE         Device (cpu/cuda/mps)
-  --confidence CONF       Confidence threshold (0.0-1.0)
-  --iou IOU              IoU threshold (0.0-1.0)
-  --resize W H           Resize dimensions
-  --skip N               Skip N frames
+  --tracker TYPE         Enable tracking (bytetrack/deepsort)
+  --track-thresh T       Tracking confidence threshold
+  --track-buffer N       Frames to keep lost tracks
+  --save                 Save output video
+  --output PATH          Output video path
+  --info                 Show system information
+  --max-frames N         Process max N frames
+```
+
+## 🎯 Object Tracking
+
+The system supports two tracking algorithms for maintaining persistent object IDs across frames:
+
+### ByteTrack (Recommended for Speed)
+
+**Best for:**
+- High-speed scenarios (traffic, sports, drones)
+- When objects don't frequently occlude each other
+- Resource-constrained environments
+
+**Advantages:**
+- Very fast (minimal overhead)
+- Simple and robust
+- Works well for 90% of use cases
+
+**Usage:**
+```bash
+python main.py --tracker bytetrack
+```
+
+### DeepSORT (Recommended for Robustness)
+
+**Best for:**
+- Scenarios with heavy occlusion (people in crowds)
+- When objects temporarily disappear (behind pillars, cars)
+- Need for appearance-based re-identification
+
+**Advantages:**
+- Better handling of occlusions
+- Appearance features help re-identify objects
+- More robust in complex scenarios
+
+**Usage:**
+```bash
+python main.py --tracker deepsort
+```
+
+### Tracking Comparison
+
+| Feature | ByteTrack | DeepSORT |
+|---------|-----------|----------|
+| Speed | ⚡⚡⚡ Very Fast | ⚡⚡ Fast |
+| Occlusion Handling | ⭐⭐ Good | ⭐⭐⭐ Excellent |
+| Re-identification | ❌ No | ✅ Yes (appearance) |
+| Memory Usage | Low | Medium |
+| Best For | Traffic, Sports | Crowds, Complex scenes |
+
+### Tracking Examples
+
+```python
+# ByteTrack Example
+from src import ObjectDetector, VideoProcessor
+
+detector = ObjectDetector(model_name="yolov8n.pt")
+processor = VideoProcessor(
+    detector=detector,
+    input_source=0,
+    tracker='bytetrack',
+  # 5. Object Tracking
+
+```python
+from src import ObjectDetector, VideoProcessor
+
+detector = ObjectDetector(model_name="yolov8n.pt")
+processor = VideoProcessor(
+    detector=detector,
+    input_source=0,
+    tracker='bytetrack'  # or 'deepsort'
+)
+processor.run()
+```
+
+### 6. People Counter
+
+```python
+# See examples/people_counter.py for a complete implementation
+# Uses tracking to count people crossing a line
+python examples/people_counter.py
+```
+
+##  tracker_config={
+        'track_thresh': 0.5,
+        'track_buffer': 30,
+        'match_thresh': 0.8
+    }
+)
+processor.run()
+```
+
+```python
+# DeepSORT Example
+processor = VideoProcessor(
+    detector=detector,
+    input_source=0,
+    tracker='deepsort',
+    tracker_config={
+        'max_age': 30,
+        'min_hits': 3,
+        'iou_threshold': 0.3,
+        'appearance_weight': 0.3
+    }
+)
+processor.run()
+```
+
+See [examples/tracking_bytetrack.py](examples/tracking_bytetrack.py) and [examples/tracking_deepsort.py](examples/tracking_deepsort.py) for complete examples.-skip N               Skip N frames
   --save                 Save output video
   --output PATH          Output video path
   --info                 Show system information
@@ -248,14 +375,17 @@ print(f"Average FPS: {results['average_fps']:.2f}")
 
 1. **Use Nano Model**: YOLOv8n is optimized for speed
 2. **GPU Acceleration**: 5-10x speedup with CUDA
-3. **Lower Resolution**: 416x416 or 320x320 for faster processing
-4. **Frame Skipping**: Skip every 2nd frame for 2x speedup
-5. **Reduce Confidence**: Lower threshold processes fewer detections
-6. **Half Precision**: FP16 inference on supported GPUs
-
-### Optimization Examples
-
-```bash
+3. x] Real-time object detection with YOLO
+- [x] Object tracking (ByteTrack & DeepSORT)
+- [x] Multi-camera support preparation
+- [ ] Web interface with Flask/FastAPI
+- [ ] Advanced tracking features (trajectory prediction)
+- [ ] Custom model training pipeline
+- [ ] Docker containerization
+- [ ] REST API for remote inference
+- [ ] Mobile app deployment (TFLite/ONNX)
+- [ ] Cloud deployment guide (AWS/Azure/GCP)
+- [ ] Action recognition and behavior analysis
 # Maximum speed (may sacrifice accuracy)
 python main.py --model yolov8n --resize 416 416 --skip 1 --confidence 0.6
 

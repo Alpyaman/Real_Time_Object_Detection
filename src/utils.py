@@ -209,7 +209,7 @@ def print_system_info():
     
     # CUDA info
     if torch.cuda.is_available():
-        print(f"CUDA Available: Yes")
+        print("CUDA Available: Yes")
         print(f"CUDA Version: {torch.version.cuda}")
         print(f"GPU: {torch.cuda.get_device_name(0)}")
         print(f"GPU Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")

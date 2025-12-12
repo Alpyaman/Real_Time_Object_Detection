@@ -11,6 +11,7 @@ from pathlib import Path
 import json
 
 from .detector import ObjectDetector, draw_detections, draw_fps
+from .tracker import ByteTracker, SimpleDeepSORT, draw_tracks
 
 
 class VideoProcessor:
@@ -30,7 +31,9 @@ class VideoProcessor:
         show_labels: bool = True,
         show_confidence: bool = True,
         bbox_thickness: int = 2,
-        font_scale: float = 0.6
+        font_scale: float = 0.6,
+        tracker: Optional[str] = None,
+        tracker_config: Optional[Dict] = None
     ):
         """
         Initialize video processor.
@@ -46,6 +49,8 @@ class VideoProcessor:
             show_confidence: Whether to show confidence scores
             bbox_thickness: Thickness of bounding boxes
             font_scale: Scale of text labels
+            tracker: Tracker type ('bytetrack', 'deepsort', or None)
+            tracker_config: Optional tracker configuration dict
         """
         self.detector = detector
         self.input_source = input_source
@@ -57,6 +62,12 @@ class VideoProcessor:
         self.show_confidence = show_confidence
         self.bbox_thickness = bbox_thickness
         self.font_scale = font_scale
+        
+        # Initialize tracker if specified
+        self.tracker_type = tracker
+        self.tracker_obj = None
+        if tracker:
+            self.tracker_obj = self._init_tracker(tracker, tracker_config or {})
         
         # Video capture
         self.cap: Optional[cv2.VideoCapture] = None
@@ -73,6 +84,25 @@ class VideoProcessor:
         
         # Detection storage
         self.all_detections: List[Dict] = []
+    
+    def _init_tracker(self, tracker_type: str, config: Dict):
+        """Initialize tracker based on type."""
+        if tracker_type.lower() == 'bytetrack':
+            return ByteTracker(
+                track_thresh=config.get('track_thresh', 0.5),
+                track_buffer=config.get('track_buffer', 30),
+                match_thresh=config.get('match_thresh', 0.8),
+                min_box_area=config.get('min_box_area', 10.0)
+            )
+        elif tracker_type.lower() == 'deepsort':
+            return SimpleDeepSORT(
+                max_age=config.get('max_age', 30),
+                min_hits=config.get('min_hits', 3),
+                iou_threshold=config.get('iou_threshold', 0.3),
+                appearance_weight=config.get('appearance_weight', 0.3)
+            )
+        else:
+            raise ValueError(f"Unknown tracker type: {tracker_type}. Use 'bytetrack' or 'deepsort'")
     
     def start(self) -> bool:
         """
@@ -109,7 +139,7 @@ class VideoProcessor:
     
     def process_frame(self, frame: np.ndarray) -> tuple[np.ndarray, List[Dict], float]:
         """
-        Process a single frame with object detection.
+        Process a single frame with object detection and optional tracking.
         
         Args:
             frame: Input frame
@@ -126,15 +156,35 @@ class VideoProcessor:
         # Detect objects
         detections, inference_time = self.detector.detect(frame)
         
-        # Draw detections if labels are enabled
+        # Apply tracking if enabled
+        if self.tracker_obj is not None and detections:
+            if self.tracker_type.lower() == 'deepsort':
+                # DeepSORT needs the frame for appearance features
+                detections = self.tracker_obj.update(detections, frame)
+            else:
+                # ByteTrack only needs detections
+                detections = self.tracker_obj.update(detections)
+        
+        # Draw detections/tracks if labels are enabled
         if self.show_labels and detections:
-            frame = draw_detections(
-                frame,
-                detections,
-                show_confidence=self.show_confidence,
-                bbox_thickness=self.bbox_thickness,
-                font_scale=self.font_scale
-            )
+            if self.tracker_obj is not None:
+                # Use tracking visualization with IDs
+                frame = draw_tracks(
+                    frame,
+                    detections,
+                    show_trajectory=False,
+                    bbox_thickness=self.bbox_thickness,
+                    font_scale=self.font_scale
+                )
+            else:
+                # Use standard detection visualization
+                frame = draw_detections(
+                    frame,
+                    detections,
+                    show_confidence=self.show_confidence,
+                    bbox_thickness=self.bbox_thickness,
+                    font_scale=self.font_scale
+                )
         
         processing_time = time.time() - start_time
         

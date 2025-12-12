@@ -15,6 +15,25 @@ video:
   resize_width: 640  # Width for processing (smaller = faster)
   resize_height: 480
 
+# Tracking Configuration
+tracking:
+  enabled: false  # Enable object tracking
+  algorithm: "bytetrack"  # Options: bytetrack, deepsort
+  
+  # ByteTrack settings
+  bytetrack:
+    track_thresh: 0.5      # Confidence threshold for track creation
+    track_buffer: 30       # Frames to keep lost tracks
+    match_thresh: 0.8      # IoU threshold for matching
+    min_box_area: 10.0     # Minimum box area to track
+  
+  # DeepSORT settings
+  deepsort:
+    max_age: 30            # Max frames to keep track without detection
+    min_hits: 3            # Min detections before track is confirmed
+    iou_threshold: 0.3     # IoU threshold for matching
+    appearance_weight: 0.3 # Weight of appearance vs motion (0-1)
+
 # Display Configuration
 display:
   show_fps: true

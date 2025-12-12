@@ -105,6 +105,28 @@ Controls:
     )
     
     parser.add_argument(
+        '--tracker',
+        type=str,
+        default=None,
+        choices=['bytetrack', 'deepsort'],
+        help='Enable object tracking (bytetrack=fast, deepsort=robust)'
+    )
+    
+    parser.add_argument(
+        '--track-thresh',
+        type=float,
+        default=0.5,
+        help='Tracking confidence threshold (ByteTrack)'
+    )
+    
+    parser.add_argument(
+        '--track-buffer',
+        type=int,
+        default=30,
+        help='Frames to keep lost tracks (both trackers)'
+    )
+    
+    parser.add_argument(
         '--save',
         action='store_true',
         help='Save output video'
@@ -166,9 +188,29 @@ Controls:
     if args.save:
         setup_output_directory(Path(args.output).parent)
     
+    # Setup tracker config if tracking enabled
+    tracker_config = None
+    if args.tracker:
+        if args.tracker == 'bytetrack':
+            tracker_config = {
+                'track_thresh': args.track_thresh,
+                'track_buffer': args.track_buffer,
+                'match_thresh': 0.8,
+                'min_box_area': 10.0
+            }
+        elif args.tracker == 'deepsort':
+            tracker_config = {
+                'max_age': args.track_buffer,
+                'min_hits': 3,
+                'iou_threshold': 0.3,
+                'appearance_weight': 0.3
+            }
+    
     # Print configuration
     print("\n" + "="*60)
     print("🎯 REAL-TIME OBJECT DETECTION")
+    if args.tracker:
+        print(f"   with {args.tracker.upper()} Tracking")
     print("="*60)
     print(f"Model: {config['model']['name']}")
     print(f"Device: {config['model']['device']}")
@@ -176,6 +218,9 @@ Controls:
     print(f"Resolution: {args.resize[0]}x{args.resize[1]}")
     print(f"Confidence Threshold: {config['model']['confidence_threshold']}")
     print(f"IoU Threshold: {config['model']['iou_threshold']}")
+    if args.tracker:
+        print(f"Tracker: {args.tracker.upper()}")
+        print(f"Track Buffer: {args.track_buffer} frames")
     if args.skip > 0:
         print(f"Frame Skip: {args.skip}")
     if args.save:
@@ -202,7 +247,9 @@ Controls:
             show_labels=config['display']['show_labels'],
             show_confidence=config['display']['show_confidence'],
             bbox_thickness=config['display']['bbox_thickness'],
-            font_scale=config['display']['font_scale']
+            font_scale=config['display']['font_scale'],
+            tracker=args.tracker,
+            tracker_config=tracker_config
         )
         
         # Run detection

@@ -11,6 +11,7 @@ A high-performance real-time object detection system using YOLOv8/YOLOv11 archit
 - **Real-Time Performance**: Achieves 20-30+ FPS on CPU, 100+ FPS on GPU
 - **Multiple YOLO Models**: Support for YOLOv8n/s/m/l/x variants
 - **Object Tracking**: ByteTrack and DeepSORT for persistent object IDs
+- **Web Interface**: Streamlit dashboard with streamlit-webrtc
 - **Flexible Input**: Webcam, video files, or RTSP streams
 - **Easy Configuration**: YAML-based configuration system
 - **Performance Monitoring**: Real-time FPS counter and statistics
@@ -75,6 +76,11 @@ python main.py --tracker bytetrack
 **Enable Object Tracking (DeepSORT - Robust)**
 ```bash
 python main.py --tracker deepsort
+```
+
+**Launch Web Interface**
+```bash
+streamlit run streamlit_app.py
 ```
 
 ### Controls
@@ -455,6 +461,12 @@ processor.save_detections("output/detections.json")
 - Check internet connection
 - Manually download from [Ultralytics](https://github.com/ultralytics/assets/releases)
 - Place in project root or specify full path
+
+**5. Streamlit WebRTC Issues**
+- Use Chrome/Edge (better WebRTC support)
+- Access via `localhost` not `127.0.0.1`
+- Check browser camera permissions
+- Try HTTPS for secure context
 
 ## 📊 Benchmarks
 

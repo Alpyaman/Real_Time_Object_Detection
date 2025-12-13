@@ -6,6 +6,12 @@ A high-performance real-time object detection system using YOLOv8/YOLOv11 archit
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
+## 🎬 Demo
+
+![Highway Vehicle Counter Demo](Animation.gif)
+
+*Real-time vehicle counting on highway camera feed with separate tracking for cars and trucks*
+
 ## 🌟 Features
 
 - **Real-Time Performance**: Achieves 20-30+ FPS on CPU, 100+ FPS on GPU
